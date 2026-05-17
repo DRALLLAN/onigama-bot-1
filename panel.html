@@ -7,313 +7,179 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:       #04040a;
-  --bg2:      #080810;
-  --bg3:      #0c0c18;
-  --border:   #1a1a30;
-  --border2:  #252540;
-  --gold:     #c9b96e;
-  --gold2:    #a08840;
-  --teal:     #28b0a8;
-  --white:    #e8e8f0;
-  --muted:    #6060a0;
-  --desc:     #b0b0d0;
-  --red:      #d04545;
-  --green:    #38bc74;
-  --card:     #0a0a16;
+  --bg:#04040a; --bg2:#080810; --bg3:#0c0c18;
+  --border:#1a1a30; --border2:#252540;
+  --gold:#c9b96e; --gold2:#a08840;
+  --teal:#28b0a8; --white:#e8e8f0;
+  --muted:#6060a0; --desc:#b0b0d0;
+  --red:#d04545; --green:#38bc74; --card:#0a0a16;
 }
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--white); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
-
-/* ── SIDEBAR ── */
-.sidebar {
-  position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
-  background: var(--bg2); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; z-index: 100;
-}
-.logo-wrap { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); }
-.logo-mark { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 3px; margin-bottom: 4px; }
-.logo-title { font-size: 18px; font-weight: 800; color: var(--white); }
-.logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-.nav { flex: 1; padding: 16px 0; overflow-y: auto; }
-.nav-section { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 2px; padding: 16px 24px 6px; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 24px; font-size: 13px; color: var(--muted);
-  cursor: pointer; border-left: 2px solid transparent;
-  transition: all .15s; text-decoration: none;
-}
-.nav-item:hover { color: var(--desc); background: #0d0d1e; }
-.nav-item.active { color: var(--gold); background: #0f0f1c; border-left-color: var(--gold); }
-.nav-icon { font-size: 16px; width: 20px; text-align: center; }
-
-.sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border); }
-.bot-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--desc); }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-/* ── MAIN ── */
-.main { margin-left: 240px; min-height: 100vh; display: flex; flex-direction: column; }
-.topbar {
-  background: var(--bg2); border-bottom: 1px solid var(--border);
-  padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 50;
-}
-.page-title { font-size: 15px; font-weight: 600; color: var(--white); }
-.topbar-right { display: flex; align-items: center; gap: 10px; }
-.badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
-.badge.live { color: var(--green); border-color: #1a3a2a; background: #0a1a12; }
-
-.content { flex: 1; padding: 28px 32px; }
-
-/* ── CARDS ── */
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
-.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
-.stat-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px; }
-.stat-value { font-size: 28px; font-weight: 800; color: var(--white); }
-.stat-sub { font-family: 'Space Mono', monospace; font-size: 10px; margin-top: 4px; }
-.stat-sub.up { color: var(--green); }
-.stat-sub.dn { color: var(--red); }
-
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-.grid3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
-
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
-.card-title { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 14px; }
-
-/* ── GOLD ANALYSIS CARD ── */
-.gold-price { font-size: 40px; font-weight: 800; color: var(--gold); margin-bottom: 4px; }
-.gold-meta { display: flex; gap: 16px; margin-bottom: 16px; }
-.gold-meta span { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
-.gold-meta strong { color: var(--desc); }
-
-.analysis-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; align-items: flex-start; }
-.analysis-row:last-child { border-bottom: none; }
-.a-icon { font-size: 14px; width: 20px; flex-shrink: 0; }
-.a-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--gold2); margin-bottom: 2px; }
-.a-text { color: var(--desc); line-height: 1.5; }
-
-/* ── CHART BARS ── */
-.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.bar-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); width: 70px; flex-shrink: 0; }
-.bar-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 3px; background: var(--gold); transition: width .8s ease; }
-.bar-fill.teal { background: var(--teal); }
-.bar-fill.muted { background: var(--muted); }
-.bar-val { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); width: 30px; text-align: right; }
-
-/* ── TABLE ── */
-.table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.table th { text-align: left; padding: 8px 12px; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; border-bottom: 1px solid var(--border); font-weight: 400; }
-.table td { padding: 10px 12px; border-bottom: 1px solid #0e0e1e; color: var(--desc); }
-.table tr:hover td { background: #0d0d1c; }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-.s-active { background: var(--green); }
-.s-idle   { background: var(--muted); }
-
-/* ── SEND PANEL ── */
-.msg-types { display: flex; gap: 6px; margin-bottom: 12px; }
-.type-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 11px; color: var(--muted); cursor: pointer; font-family: 'Syne', sans-serif; transition: all .15s; }
-.type-btn.active { background: #1a1608; border-color: var(--gold2); color: var(--gold); }
-.msg-area { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--desc); resize: none; font-family: 'Space Mono', monospace; line-height: 1.6; margin-bottom: 12px; }
-.msg-area:focus { outline: none; border-color: var(--border2); }
-.send-row { display: flex; align-items: center; justify-content: space-between; }
-.send-btn { background: #181408; border: 1px solid var(--gold2); border-radius: 8px; padding: 8px 18px; font-size: 12px; color: var(--gold); cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 600; transition: all .15s; }
-.send-btn:hover { background: #201a08; }
-.channel-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
-
-/* ── CONTENT LIST ── */
-.content-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
-.ci-title { font-size: 12px; color: var(--desc); margin-bottom: 3px; }
-.ci-sub { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
-.ci-badge { font-family: 'Space Mono', monospace; font-size: 9px; padding: 3px 9px; border-radius: 10px; }
-.ci-ready { background: #0a1e12; color: var(--green); border: 1px solid #1a3a24; }
-.ci-draft { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
-
-/* ── SECTION TABS ── */
-.section { display: none; }
-.section.active { display: block; }
-
-/* ── MOTIV CARD ── */
-.motiv-list { display: flex; flex-direction: column; gap: 8px; }
-.motiv-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: border-color .15s; }
-.motiv-item:hover { border-color: var(--border2); }
-.motiv-text { font-size: 13px; color: var(--desc); font-style: italic; margin-bottom: 6px; line-height: 1.6; }
-.motiv-meta { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
-
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--white);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.logo-wrap{padding:28px 24px 24px;border-bottom:1px solid var(--border)}
+.logo-mark{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:4px}
+.logo-title{font-size:18px;font-weight:800}
+.logo-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.nav{flex:1;padding:16px 0;overflow-y:auto}
+.nav-section{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;padding:16px 24px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 24px;font-size:13px;color:var(--muted);cursor:pointer;border-left:2px solid transparent;transition:all .15s}
+.nav-item:hover{color:var(--desc);background:#0d0d1e}
+.nav-item.active{color:var(--gold);background:#0f0f1c;border-left-color:var(--gold)}
+.sidebar-footer{padding:16px 24px;border-top:1px solid var(--border)}
+.bot-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--desc)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-size:15px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.badge.live{color:var(--green);border-color:#1a3a2a;background:#0a1a12}
+.content{flex:1;padding:28px 32px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.stat-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:800}
+.stat-sub{font-family:'Space Mono',monospace;font-size:10px;margin-top:4px}
+.stat-sub.up{color:var(--green)} .stat-sub.dn{color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.grid3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px}
+.card-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-bottom:14px}
+.gold-price{font-size:40px;font-weight:800;color:var(--gold);margin-bottom:4px}
+.gold-meta{display:flex;gap:16px;margin-bottom:16px}
+.gold-meta span{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+.gold-meta strong{color:var(--desc)}
+.analysis-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start}
+.analysis-row:last-child{border-bottom:none}
+.a-icon{font-size:14px;width:20px;flex-shrink:0}
+.a-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--gold2);margin-bottom:2px}
+.a-text{color:var(--desc);line-height:1.5}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);width:70px;flex-shrink:0}
+.bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--gold);transition:width .8s ease}
+.bar-fill.teal{background:var(--teal)} .bar-fill.muted{background:var(--muted)}
+.bar-val{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);width:30px;text-align:right}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th{text-align:left;padding:8px 12px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:400}
+.table td{padding:10px 12px;border-bottom:1px solid #0e0e1e;color:var(--desc)}
+.table tr:hover td{background:#0d0d1c}
+.status-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px}
+.s-active{background:var(--green)} .s-idle{background:var(--muted)}
+.msg-types{display:flex;gap:6px;margin-bottom:12px}
+.type-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.type-btn.active{background:#1a1608;border-color:var(--gold2);color:var(--gold)}
+.msg-area{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--desc);resize:none;font-family:'Space Mono',monospace;line-height:1.6;margin-bottom:12px}
+.msg-area:focus{outline:none;border-color:var(--border2)}
+.send-row{display:flex;align-items:center;justify-content:space-between}
+.send-btn{background:#181408;border:1px solid var(--gold2);border-radius:8px;padding:8px 18px;font-size:12px;color:var(--gold);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .15s}
+.send-btn:hover{background:#201a08}
+.send-btn:disabled{opacity:.5;cursor:not-allowed}
+.channel-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.content-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.ci-title{font-size:12px;color:var(--desc);margin-bottom:3px}
+.ci-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.ci-badge{font-family:'Space Mono',monospace;font-size:9px;padding:3px 9px;border-radius:10px}
+.ci-ready{background:#0a1e12;color:var(--green);border:1px solid #1a3a24}
+.ci-draft{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.section{display:none} .section.active{display:block}
+.loading{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);padding:20px;text-align:center}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:12px;color:var(--desc);font-family:'Space Mono',monospace;z-index:1000;transform:translateY(100px);transition:transform .3s;opacity:0}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:#1a4028;color:var(--green)}
+.toast.error{border-color:#4a1a1a;color:var(--red)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo-wrap">
     <div class="logo-mark">ONIGAMA · AI BRAIN</div>
     <div class="logo-title">Admin Panel</div>
     <div class="logo-sub">v2.0 — bot.onigama.com</div>
   </div>
-
   <nav class="nav">
     <div class="nav-section">INTELLIGENCE</div>
-    <a class="nav-item active" onclick="show('gold',this)">
-      <span class="nav-icon">🪙</span> Gold Analysis
-    </a>
-    <a class="nav-item" onclick="show('users',this)">
-      <span class="nav-icon">👥</span> Bot Users
-    </a>
-    <a class="nav-item" onclick="show('stats',this)">
-      <span class="nav-icon">📊</span> Statistics
-    </a>
-
+    <div class="nav-item active" onclick="show('gold',this)">🪙 &nbsp;Gold Analysis</div>
+    <div class="nav-item" onclick="show('users',this)">👥 &nbsp;Bot Users</div>
+    <div class="nav-item" onclick="show('stats',this)">📊 &nbsp;Statistics</div>
     <div class="nav-section">OPERATIONS</div>
-    <a class="nav-item" onclick="show('send',this)">
-      <span class="nav-icon">📢</span> Send to Channel
-    </a>
-    <a class="nav-item" onclick="show('content',this)">
-      <span class="nav-icon">🎬</span> Content Library
-    </a>
-    <a class="nav-item" onclick="show('motiv',this)">
-      <span class="nav-icon">🔥</span> Motivational
-    </a>
-
+    <div class="nav-item" onclick="show('send',this)">📢 &nbsp;Send to Channel</div>
+    <div class="nav-item" onclick="show('content',this)">🎬 &nbsp;Content Library</div>
     <div class="nav-section">SYSTEM</div>
-    <a class="nav-item" onclick="show('settings',this)">
-      <span class="nav-icon">⚙️</span> Settings
-    </a>
+    <div class="nav-item" onclick="show('settings',this)">⚙️ &nbsp;Settings</div>
   </nav>
-
   <div class="sidebar-footer">
-    <div class="bot-status">
-      <div class="dot"></div>
-      Bot Online · @OnigamaFX
-    </div>
+    <div class="bot-status"><div class="dot"></div>Bot Online · @OnigamaFX</div>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <div class="page-title" id="page-title">Gold Live Analysis</div>
     <div class="topbar-right">
-      <div class="badge live">● LIVE</div>
+      <div class="badge live" id="live-badge">● LIVE</div>
       <div class="badge">bot.onigama.com</div>
-      <div class="badge">147 users</div>
+      <div class="badge" id="user-count-badge">-- users</div>
     </div>
   </div>
 
   <div class="content">
 
-    <!-- ── GOLD ── -->
+    <!-- GOLD -->
     <div class="section active" id="sec-gold">
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">CURRENT PRICE</div>
-          <div class="stat-value" style="color:var(--gold)">4,540</div>
-          <div class="stat-sub dn">▼ -2.40% today</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">SESSION HIGH</div>
-          <div class="stat-value">4,665</div>
-          <div class="stat-sub up">↑ High</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">SESSION LOW</div>
-          <div class="stat-value">4,511</div>
-          <div class="stat-sub dn">↓ Low</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">CHANGE</div>
-          <div class="stat-value" style="color:var(--red)">-111</div>
-          <div class="stat-sub dn">USD decline</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">CURRENT PRICE</div><div class="stat-value" id="g-price" style="color:var(--gold)">--</div><div class="stat-sub dn" id="g-change">Loading...</div></div>
+        <div class="stat-card"><div class="stat-label">SESSION HIGH</div><div class="stat-value" id="g-high">--</div><div class="stat-sub up">↑ High</div></div>
+        <div class="stat-card"><div class="stat-label">SESSION LOW</div><div class="stat-value" id="g-low">--</div><div class="stat-sub dn">↓ Low</div></div>
+        <div class="stat-card"><div class="stat-label">TIME</div><div class="stat-value" id="g-time" style="font-size:18px">--:--</div><div class="stat-sub">UTC</div></div>
       </div>
-
       <div class="grid3">
         <div class="card">
           <div class="card-title">ICT / SMC ANALYSIS</div>
-          <div class="gold-price">$4,540.58</div>
-          <div class="gold-meta">
-            <span>Open <strong>4,652</strong></span>
-            <span>Ask <strong>4,541</strong></span>
-            <span>Bid <strong>4,540</strong></span>
-            <span>21:14 UTC</span>
-          </div>
-          <div class="analysis-row">
-            <div class="a-icon">📊</div>
-            <div><div class="a-label">STRUCTURE</div><div class="a-text">Bearish — significant selloff confirms downside control</div></div>
-          </div>
-          <div class="analysis-row">
-            <div class="a-icon">🎯</div>
-            <div><div class="a-label">BIAS</div><div class="a-text">Short-term bearish — sell-side remains favored</div></div>
-          </div>
-          <div class="analysis-row">
-            <div class="a-icon">⚡</div>
-            <div><div class="a-label">KEY LEVEL</div><div class="a-text">4,511.5 — critical low liquidity zone</div></div>
-          </div>
-          <div class="analysis-row">
-            <div class="a-icon">💧</div>
-            <div><div class="a-label">LIQUIDITY</div><div class="a-text">SSL below 4,511 — primary institutional target</div></div>
-          </div>
-          <div class="analysis-row">
-            <div class="a-icon">🔔</div>
-            <div><div class="a-label">NOTE</div><div class="a-text">Discount state — wait for CHoCH before committing</div></div>
+          <div class="gold-price" id="g-price2">$--</div>
+          <div class="gold-meta" id="g-meta"><span>Loading market data...</span></div>
+          <div id="g-analysis"><div class="loading">Fetching analysis...</div></div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <button class="send-btn" onclick="loadGold()" style="width:100%">↻ &nbsp;Refresh Analysis</button>
           </div>
         </div>
-
         <div class="card">
-          <div class="card-title">DAILY RANGE</div>
-          <div style="margin-top:8px">
-            <div class="bar-row"><div class="bar-label">4,665</div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><div class="bar-val">High</div></div>
-            <div class="bar-row"><div class="bar-label">4,652</div><div class="bar-track"><div class="bar-fill muted" style="width:96%"></div></div><div class="bar-val">Open</div></div>
-            <div class="bar-row"><div class="bar-label">4,541</div><div class="bar-track"><div class="bar-fill" style="width:71%"></div></div><div class="bar-val">Now</div></div>
-            <div class="bar-row"><div class="bar-label">4,511</div><div class="bar-track"><div class="bar-fill teal" style="width:66%"></div></div><div class="bar-val">Low</div></div>
-          </div>
-          <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border)">
-            <button class="send-btn" style="width:100%">Refresh Analysis ↻</button>
-          </div>
+          <div class="card-title">SESSION STATUS</div>
+          <div id="session-info"><div class="loading">Loading session...</div></div>
         </div>
       </div>
     </div>
 
-    <!-- ── USERS ── -->
+    <!-- USERS -->
     <div class="section" id="sec-users">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">TOTAL USERS</div><div class="stat-value">147</div><div class="stat-sub up">+12 this week</div></div>
-        <div class="stat-card"><div class="stat-label">ACTIVE TODAY</div><div class="stat-value">38</div><div class="stat-sub up">25% of total</div></div>
-        <div class="stat-card"><div class="stat-label">MESSAGES TODAY</div><div class="stat-value">213</div><div class="stat-sub up">+18%</div></div>
-        <div class="stat-card"><div class="stat-label">TOP COMMAND</div><div class="stat-value" style="font-size:20px">/gold</div><div class="stat-sub up">42% of all</div></div>
+        <div class="stat-card"><div class="stat-label">TOTAL USERS</div><div class="stat-value" id="s-total">--</div><div class="stat-sub up">all time</div></div>
+        <div class="stat-card"><div class="stat-label">ACTIVE TODAY</div><div class="stat-value" id="s-active">--</div><div class="stat-sub up">last 24h</div></div>
+        <div class="stat-card"><div class="stat-label">TOTAL MESSAGES</div><div class="stat-value" id="s-msgs">--</div><div class="stat-sub up">all time</div></div>
+        <div class="stat-card"><div class="stat-label">AVG MESSAGES</div><div class="stat-value" id="s-avg">--</div><div class="stat-sub">per user</div></div>
       </div>
       <div class="card">
         <div class="card-title">RECENT ACTIVE USERS</div>
-        <table class="table">
-          <thead><tr><th>CHAT ID</th><th>LAST MESSAGE</th><th>COMMAND</th><th>STATUS</th></tr></thead>
-          <tbody>
-            <tr><td>99007014</td><td>2 min ago</td><td>/gold</td><td><span class="status-dot s-active"></span>Active</td></tr>
-            <tr><td>88341209</td><td>15 min ago</td><td>/psych</td><td><span class="status-dot s-active"></span>Active</td></tr>
-            <tr><td>77612038</td><td>1 hour ago</td><td>/reel</td><td><span class="status-dot s-idle"></span>Idle</td></tr>
-            <tr><td>66498712</td><td>3 hours ago</td><td>/checklist</td><td><span class="status-dot s-idle"></span>Idle</td></tr>
-            <tr><td>55120934</td><td>Yesterday</td><td>/setup</td><td><span class="status-dot s-idle"></span>Idle</td></tr>
-          </tbody>
-        </table>
+        <div id="users-table"><div class="loading">Loading users...</div></div>
       </div>
     </div>
 
-    <!-- ── STATS ── -->
+    <!-- STATS -->
     <div class="section" id="sec-stats">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">TOTAL MESSAGES</div><div class="stat-value">1,842</div><div class="stat-sub up">this month</div></div>
-        <div class="stat-card"><div class="stat-label">/GOLD USAGE</div><div class="stat-value">42%</div><div class="stat-sub up">most used</div></div>
-        <div class="stat-card"><div class="stat-label">DAILY AVERAGE</div><div class="stat-value">61</div><div class="stat-sub up">messages/day</div></div>
-        <div class="stat-card"><div class="stat-label">NEW USERS</div><div class="stat-value">28</div><div class="stat-sub up">this month</div></div>
+        <div class="stat-card"><div class="stat-label">TOTAL MESSAGES</div><div class="stat-value" id="st-msgs">--</div><div class="stat-sub up">all time</div></div>
+        <div class="stat-card"><div class="stat-label">TOTAL USERS</div><div class="stat-value" id="st-users">--</div><div class="stat-sub up">registered</div></div>
+        <div class="stat-card"><div class="stat-label">ACTIVE TODAY</div><div class="stat-value" id="st-active">--</div><div class="stat-sub up">last 24h</div></div>
+        <div class="stat-card"><div class="stat-label">AVG/USER</div><div class="stat-value" id="st-avg">--</div><div class="stat-sub">messages</div></div>
       </div>
       <div class="card">
-        <div class="card-title">COMMAND USAGE BREAKDOWN</div>
+        <div class="card-title">COMMAND USAGE</div>
         <div style="margin-top:8px">
           <div class="bar-row"><div class="bar-label">/gold</div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><div class="bar-val">42%</div></div>
           <div class="bar-row"><div class="bar-label">/psych</div><div class="bar-track"><div class="bar-fill teal" style="width:52%"></div></div><div class="bar-val">22%</div></div>
@@ -324,128 +190,66 @@ body { background: var(--bg); color: var(--white); font-family: 'Syne', sans-ser
       </div>
     </div>
 
-    <!-- ── SEND ── -->
+    <!-- SEND -->
     <div class="section" id="sec-send">
       <div class="grid2">
         <div class="card">
           <div class="card-title">COMPOSE MESSAGE</div>
           <div class="msg-types">
-            <button class="type-btn active" onclick="setType(this)">Market Analysis</button>
-            <button class="type-btn" onclick="setType(this)">Motivational</button>
-            <button class="type-btn" onclick="setType(this)">Reel Idea</button>
+            <button class="type-btn active" onclick="setType(this,'market')">Market Analysis</button>
+            <button class="type-btn" onclick="setType(this,'psych')">Motivational</button>
+            <button class="type-btn" onclick="setType(this,'reel')">Reel Idea</button>
           </div>
-          <textarea class="msg-area" rows="7" id="msg-body">🪙 XAUUSD — ICT/SMC Analysis
+          <textarea class="msg-area" rows="8" id="msg-body">🪙 XAUUSD — ICT/SMC Analysis
 
 📊 STRUCTURE: Bearish
 🎯 BIAS: Short-term bearish
 ⚡ KEY LEVEL: 4,511
-🔔 NOTE: Wait for CHoCH before entering</textarea>
+🔔 NOTE: Wait for CHoCH before entering
+
+— Onigama AI Brain</textarea>
           <div class="send-row">
             <div class="channel-label">Channel: @OnigamaFX</div>
-            <button class="send-btn">Send to Channel →</button>
+            <div style="display:flex;gap:8px">
+              <button class="send-btn" onclick="generateMsg()" id="gen-btn">Generate ↗</button>
+              <button class="send-btn" onclick="sendToChannel()" id="send-btn" style="background:#0a1e12;border-color:#1a4028;color:var(--green)">Send →</button>
+            </div>
           </div>
         </div>
         <div class="card">
           <div class="card-title">PREVIEW</div>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'Space Mono',monospace;font-size:11px;color:var(--desc);line-height:1.8" id="preview">
-            🪙 <strong style="color:var(--gold)">XAUUSD — ICT/SMC Analysis</strong><br><br>
-            📊 STRUCTURE: Bearish<br>
-            🎯 BIAS: Short-term bearish<br>
-            ⚡ KEY LEVEL: 4,511<br>
-            🔔 NOTE: Wait for CHoCH<br><br>
-            <span style="color:var(--muted)">— Onigama AI Brain</span>
-          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'Space Mono',monospace;font-size:11px;color:var(--desc);line-height:1.9;white-space:pre-wrap;min-height:200px" id="preview"></div>
         </div>
       </div>
     </div>
 
-    <!-- ── CONTENT ── -->
+    <!-- CONTENT -->
     <div class="section" id="sec-content">
       <div class="card">
         <div class="card-title">CONTENT LIBRARY</div>
         <div style="margin-top:4px">
-          <div class="content-item">
-            <div><div class="ci-title">Reel: Retail vs Institutional Trader mindset</div><div class="ci-sub">Created today · 15 min ago</div></div>
-            <span class="ci-badge ci-ready">Ready</span>
-          </div>
-          <div class="content-item">
-            <div><div class="ci-title">Reel: Fear psychology in gold trading</div><div class="ci-sub">Created yesterday</div></div>
-            <span class="ci-badge ci-ready">Ready</span>
-          </div>
-          <div class="content-item">
-            <div><div class="ci-title">Caption: ICT liquidity concept explained</div><div class="ci-sub">Editing in progress</div></div>
-            <span class="ci-badge ci-draft">Draft</span>
-          </div>
-          <div class="content-item">
-            <div><div class="ci-title">Reel: Discipline — the only currency of success</div><div class="ci-sub">3 days ago</div></div>
-            <span class="ci-badge ci-ready">Ready</span>
-          </div>
-          <div class="content-item">
-            <div><div class="ci-title">Story: Daily trader checklist</div><div class="ci-sub">Pending review</div></div>
-            <span class="ci-badge ci-draft">Draft</span>
-          </div>
+          <div class="content-item"><div><div class="ci-title">Reel: Retail vs Institutional Trader mindset</div><div class="ci-sub">Today</div></div><span class="ci-badge ci-ready">Ready</span></div>
+          <div class="content-item"><div><div class="ci-title">Reel: Fear psychology in gold trading</div><div class="ci-sub">Yesterday</div></div><span class="ci-badge ci-ready">Ready</span></div>
+          <div class="content-item"><div><div class="ci-title">Caption: ICT liquidity concept explained</div><div class="ci-sub">In progress</div></div><span class="ci-badge ci-draft">Draft</span></div>
+          <div class="content-item"><div><div class="ci-title">Reel: Discipline — the only currency of success</div><div class="ci-sub">3 days ago</div></div><span class="ci-badge ci-ready">Ready</span></div>
         </div>
       </div>
     </div>
 
-    <!-- ── MOTIV ── -->
-    <div class="section" id="sec-motiv">
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">SAVED MESSAGES</div>
-          <div class="motiv-list">
-            <div class="motiv-item">
-              <div class="motiv-text">"Discipline is the only currency of the successful trader."</div>
-              <div class="motiv-meta">Psychology · 2 days ago</div>
-            </div>
-            <div class="motiv-item">
-              <div class="motiv-text">"The market is always right. Your bias is just a hypothesis."</div>
-              <div class="motiv-meta">Risk Management · 5 days ago</div>
-            </div>
-            <div class="motiv-item">
-              <div class="motiv-text">"Patience is not waiting. It is executing at the right moment."</div>
-              <div class="motiv-meta">Psychology · 1 week ago</div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">GENERATE NEW</div>
-          <div class="msg-types" style="margin-bottom:12px">
-            <button class="type-btn active" onclick="setType(this)">Psychology</button>
-            <button class="type-btn" onclick="setType(this)">Discipline</button>
-            <button class="type-btn" onclick="setType(this)">Identity</button>
-          </div>
-          <textarea class="msg-area" rows="4" placeholder="Topic or keyword...">Trading discipline under loss</textarea>
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <button class="send-btn" style="flex:1">Generate with AI ↗</button>
-            <button class="send-btn" style="background:#0a1e12;border-color:#1a4028;color:var(--green)">Send</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── SETTINGS ── -->
+    <!-- SETTINGS -->
     <div class="section" id="sec-settings">
-      <div class="card" style="max-width:560px">
-        <div class="card-title">BOT CONFIGURATION</div>
-        <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px">
+      <div class="card" style="max-width:520px">
+        <div class="card-title">PANEL CONFIGURATION</div>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px">
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">TELEGRAM TOKEN</div>
-            <input type="password" value="••••••••••••••••••••••" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--desc);font-family:'Space Mono',monospace;font-size:12px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">PANEL ACCESS KEY</div>
+            <input id="cfg-key" type="password" placeholder="Enter panel key..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--desc);font-family:'Space Mono',monospace;font-size:12px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">OPENROUTER KEY</div>
-            <input type="password" value="••••••••••••••••••••••" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--desc);font-family:'Space Mono',monospace;font-size:12px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">API BASE URL</div>
+            <input id="cfg-url" type="text" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--desc);font-family:'Space Mono',monospace;font-size:12px">
           </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">GOLD API KEY</div>
-            <input type="password" value="••••••••••••••••••••••" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--desc);font-family:'Space Mono',monospace;font-size:12px">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace">TELEGRAM CHANNEL</div>
-            <input type="text" value="@OnigamaFX" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--desc);font-family:'Space Mono',monospace;font-size:12px">
-          </div>
-          <button class="send-btn" style="width:100%;margin-top:4px">Save Configuration →</button>
+          <button class="send-btn" onclick="saveConfig()" style="width:100%">Save & Connect →</button>
         </div>
       </div>
     </div>
@@ -453,11 +257,39 @@ body { background: var(--bg); color: var(--white); font-family: 'Syne', sans-ser
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-const titles = {
-  gold:'Gold Live Analysis', users:'Bot Users', stats:'Statistics',
-  send:'Send to Channel', content:'Content Library', motiv:'Motivational Messages', settings:'Settings'
-};
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+let API_URL = localStorage.getItem('api_url') || (location.origin + '/api.php');
+let API_KEY = localStorage.getItem('api_key') || 'onigama2024';
+let currentType = 'market';
+
+document.getElementById('cfg-url').value = API_URL;
+document.getElementById('cfg-key').value = API_KEY;
+
+// ─── API CALL ──────────────────────────────────────────────────────────────
+async function api(action, body=null) {
+  const opts = {
+    method: body ? 'POST' : 'GET',
+    headers: { 'Content-Type': 'application/json', 'X-Panel-Key': API_KEY }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const url = `${API_URL}?action=${action}`;
+  const res = await fetch(url, opts);
+  return res.json();
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ─── SECTIONS ──────────────────────────────────────────────────────────────
+const titles = { gold:'Gold Live Analysis', users:'Bot Users', stats:'Statistics', send:'Send to Channel', content:'Content Library', settings:'Settings' };
 
 function show(id, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -465,19 +297,145 @@ function show(id, el) {
   document.getElementById('sec-' + id).classList.add('active');
   if (el) el.classList.add('active');
   document.getElementById('page-title').textContent = titles[id] || '';
+  if (id === 'gold') loadGold();
+  if (id === 'users' || id === 'stats') loadStats();
 }
 
-function setType(btn) {
+// ─── GOLD ──────────────────────────────────────────────────────────────────
+async function loadGold() {
+  document.getElementById('g-analysis').innerHTML = '<div class="loading">Fetching live data...</div>';
+  try {
+    const d = await api('gold');
+    if (d.error) { toast('Error: ' + d.error, 'error'); return; }
+
+    document.getElementById('g-price').textContent  = d.price;
+    document.getElementById('g-price2').textContent = d.price;
+    document.getElementById('g-high').textContent   = d.high;
+    document.getElementById('g-low').textContent    = d.low;
+    document.getElementById('g-time').textContent   = d.time;
+    document.getElementById('g-change').textContent = d.change + ' (' + d.change_pct + '%)';
+
+    // تجزیه تحلیل به ردیف‌ها
+    const lines = d.analysis.split('\n').filter(l => l.trim());
+    let html = '';
+    for (const line of lines) {
+      const icons = ['📊','🎯','⚡','💧','🔔','🌐','🛡','✅'];
+      const hasIcon = icons.some(i => line.startsWith(i));
+      if (hasIcon) {
+        const icon = line.slice(0, 2);
+        const rest = line.slice(2).trim();
+        const parts = rest.split(':');
+        const label = parts[0].trim().replace(/\*\*/g,'');
+        const text  = parts.slice(1).join(':').trim().replace(/\*\*/g,'');
+        html += `<div class="analysis-row"><div class="a-icon">${icon}</div><div><div class="a-label">${label}</div><div class="a-text">${text}</div></div></div>`;
+      }
+    }
+    document.getElementById('g-analysis').innerHTML = html || `<div style="font-size:12px;color:var(--desc);line-height:1.7">${d.analysis}</div>`;
+
+    // سشن
+    const s = await api('session');
+    document.getElementById('session-info').innerHTML = `<div style="font-size:12px;color:var(--desc);line-height:1.8">${(s.analysis||'').replace(/\n/g,'<br>')}</div>`;
+
+  } catch(e) {
+    toast('Connection failed', 'error');
+    document.getElementById('g-analysis').innerHTML = '<div class="loading">Connection error</div>';
+  }
+}
+
+// ─── STATS ─────────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const d = await api('stats');
+    ['total_users','active_today','total_messages','daily_average'].forEach((k,i) => {
+      const ids = ['s-total','s-active','s-msgs','s-avg','st-users','st-active','st-msgs','st-avg'];
+      if (document.getElementById(ids[i])) document.getElementById(ids[i]).textContent = d[k] ?? '--';
+      if (document.getElementById(ids[i+4])) document.getElementById(ids[i+4]).textContent = d[k] ?? '--';
+    });
+    document.getElementById('user-count-badge').textContent = (d.total_users || '--') + ' users';
+
+    const u = await api('users');
+    if (u.users && u.users.length > 0) {
+      let rows = u.users.map(usr => {
+        const active = new Date() - new Date(usr.updated) < 86400000;
+        return `<tr>
+          <td>${usr.chat_id}</td>
+          <td>${usr.updated ? usr.updated.split(' ')[1] : '--'}</td>
+          <td>${usr.last_cmd}</td>
+          <td>${usr.msg_count} msgs</td>
+          <td><span class="status-dot ${active ? 's-active' : 's-idle'}"></span>${active ? 'Active' : 'Idle'}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('users-table').innerHTML = `<table class="table"><thead><tr><th>CHAT ID</th><th>LAST SEEN</th><th>COMMAND</th><th>MESSAGES</th><th>STATUS</th></tr></thead><tbody>${rows}</tbody></table>`;
+    } else {
+      document.getElementById('users-table').innerHTML = '<div class="loading">No users yet</div>';
+    }
+  } catch(e) {
+    toast('Failed to load stats', 'error');
+  }
+}
+
+// ─── SEND ──────────────────────────────────────────────────────────────────
+function setType(btn, type) {
   btn.closest('.msg-types').querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  currentType = type;
 }
 
-// Bar fill animation on load
+document.getElementById('msg-body').addEventListener('input', updatePreview);
+
+function updatePreview() {
+  document.getElementById('preview').textContent = document.getElementById('msg-body').value;
+}
+updatePreview();
+
+async function generateMsg() {
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.textContent = 'Generating...';
+  try {
+    const topic = document.getElementById('msg-body').value;
+    const d = await api('generate', { type: currentType, topic });
+    if (d.content) {
+      document.getElementById('msg-body').value = d.content;
+      updatePreview();
+      toast('Content generated', 'success');
+    }
+  } catch(e) { toast('Generation failed', 'error'); }
+  btn.disabled = false; btn.textContent = 'Generate ↗';
+}
+
+async function sendToChannel() {
+  const text = document.getElementById('msg-body').value.trim();
+  if (!text) { toast('Message is empty', 'error'); return; }
+  if (!confirm('Send this message to the Telegram channel?')) return;
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    const d = await api('send', { text });
+    if (d.success) toast('Sent to ' + d.channel, 'success');
+    else toast('Failed to send', 'error');
+  } catch(e) { toast('Send failed', 'error'); }
+  btn.disabled = false; btn.textContent = 'Send →';
+}
+
+// ─── SETTINGS ──────────────────────────────────────────────────────────────
+function saveConfig() {
+  API_URL = document.getElementById('cfg-url').value.trim();
+  API_KEY = document.getElementById('cfg-key').value.trim();
+  localStorage.setItem('api_url', API_URL);
+  localStorage.setItem('api_key', API_KEY);
+  toast('Configuration saved', 'success');
+  loadGold();
+  loadStats();
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
+  loadGold();
+  loadStats();
   document.querySelectorAll('.bar-fill').forEach(b => {
-    const w = b.style.width;
-    b.style.width = '0';
-    setTimeout(() => b.style.width = w, 100);
+    const w = b.style.width; b.style.width = '0';
+    setTimeout(() => b.style.width = w, 200);
   });
 });
 </script>
