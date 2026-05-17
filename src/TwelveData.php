@@ -1,68 +1,53 @@
 <?php
-
 declare(strict_types=1);
-
 class TwelveData
 {
-    private string $apiKey;
+    private string $goldApiKey;
     private Logger $logger;
-    private string $endpoint = 'https://api.twelvedata.com';
-
     public function __construct(string $apiKey, Logger $logger)
     {
-        $this->apiKey = $apiKey;
-        $this->logger = $logger;
+        $this->goldApiKey = getenv('GOLDAPI_KEY') ?: $apiKey;
+        $this->logger     = $logger;
     }
-
-    /**
-     * دریافت آخرین شمع‌های XAUUSD
-     * خروجی: متن آماده برای ارسال به هوش مصنوعی
-     */
     public function getGoldCandles(string $interval = '15min', int $count = 5): string
     {
-        $url = $this->endpoint . '/time_series?' . http_build_query([
-            'symbol'     => 'XAUUSD',
-            'interval'   => $interval,
-            'outputsize' => $count,
-            'apikey'     => $this->apiKey,
-        ]);
-
-        $ch = curl_init($url);
+        $ch = curl_init('https://www.goldapi.io/api/XAU/USD');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 10,
-            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+            CURLOPT_HTTPHEADER     => [
+                'x-access-token: ' . $this->goldApiKey,
+                'Content-Type: application/json',
+            ],
         ]);
-
         $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error    = curl_error($ch);
         curl_close($ch);
-
-        if ($error) {
-            $this->logger->error("خطای cURL دوازده‌داده: $error");
+        if ($error || $httpCode !== 200) {
+            $this->logger->error("خطای goldapi: $error | کد: $httpCode");
             return '';
         }
-
         $data = json_decode($response, true);
-
-        if (empty($data['values']) || !is_array($data['values'])) {
-            $this->logger->error("داده نامعتبر از دوازده‌داده: " . $response);
+        if (empty($data['price'])) {
+            $this->logger->error("داده نامعتبر: $response");
             return '';
         }
-
-        // ساخت متن OHLC برای هوش مصنوعی
-        $lines = [];
-        foreach ($data['values'] as $i => $candle) {
-            $num     = $i + 1;
-            $label   = $i === 0 ? ' (newest)' : '';
-            $lines[] = "Candle {$num}{$label}: " .
-                       "Time:{$candle['datetime']} " .
-                       "O:{$candle['open']} " .
-                       "H:{$candle['high']} " .
-                       "L:{$candle['low']} " .
-                       "C:{$candle['close']}";
-        }
-
-        return implode("\n", $lines);
+        $price     = $data['price'];
+        $open      = $data['open_price']  ?? 'N/A';
+        $high      = $data['high_price']  ?? 'N/A';
+        $low       = $data['low_price']   ?? 'N/A';
+        $change    = $data['ch']          ?? 'N/A';
+        $changePct = $data['chp']         ?? 'N/A';
+        $ask       = $data['ask']         ?? 'N/A';
+        $bid       = $data['bid']         ?? 'N/A';
+        $time      = date('Y-m-d H:i') . ' UTC';
+        return
+            "XAUUSD Live Market Data:\n" .
+            "Time: {$time}\n" .
+            "Price: {$price} | Ask: {$ask} | Bid: {$bid}\n" .
+            "Open: {$open} | High: {$high} | Low: {$low}\n" .
+            "Change: {$change} ({$changePct}%)\n" .
+            "Analyze this live data with institutional precision.";
     }
 }
