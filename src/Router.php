@@ -36,142 +36,43 @@ class Router
         $this->logger->info("پیام از $chatId: " . mb_substr($text, 0, 100));
         $this->telegram->sendTyping($chatId);
 
-        // تشخیص زبان
-        $lang = $this->detectLanguage($text);
-
         $cmd   = strtolower(explode(' ', $text)[0]);
         $param = trim(substr($text, strlen($cmd)));
 
         match(true) {
-            in_array($cmd, ['/start', '/help']) => $this->handleHelp($chatId, $lang),
-            $cmd === '/clear'                   => $this->handleClear($chatId, $lang),
-            $cmd === '/gold'                    => $this->handleMarket($chatId, 'XAUUSD', $lang),
-            $cmd === '/eurusd'                  => $this->handleMarket($chatId, 'EURUSD', $lang),
-            $cmd === '/gbpusd'                  => $this->handleMarket($chatId, 'GBPUSD', $lang),
-            $cmd === '/usdjpy'                  => $this->handleMarket($chatId, 'USDJPY', $lang),
-            $cmd === '/usdchf'                  => $this->handleMarket($chatId, 'USDCHF', $lang),
-            $cmd === '/mtf'                     => $this->handleMTF($chatId, $param, $lang),
-            $cmd === '/session'                 => $this->handleSession($chatId, $lang),
-            $cmd === '/news'                    => $this->handleNews($chatId, $lang),
-            $cmd === '/setup'                   => $this->handleSetup($chatId, $param, $lang),
-            $cmd === '/journal'                 => $this->handleJournal($chatId, $param, $lang),
-            $cmd === '/checklist'               => $this->handleChecklist($chatId, $lang),
-            $cmd === '/reel'                    => $this->handleReel($chatId, $param, $lang),
-            $cmd === '/psych'                   => $this->handlePsych($chatId, $param, $lang),
-            default                             => $this->handleGeneral($chatId, $text, $lang),
+            in_array($cmd, ['/start', '/help']) => $this->handleHelp($chatId),
+            $cmd === '/clear'                   => $this->handleClear($chatId),
+            $cmd === '/gold'                    => $this->handleMarket($chatId, 'XAUUSD'),
+            $cmd === '/eurusd'                  => $this->handleMarket($chatId, 'EURUSD'),
+            $cmd === '/gbpusd'                  => $this->handleMarket($chatId, 'GBPUSD'),
+            $cmd === '/usdjpy'                  => $this->handleMarket($chatId, 'USDJPY'),
+            $cmd === '/usdchf'                  => $this->handleMarket($chatId, 'USDCHF'),
+            $cmd === '/mtf'                     => $this->handleMTF($chatId, $param),
+            $cmd === '/session'                 => $this->handleSession($chatId),
+            $cmd === '/news'                    => $this->handleNews($chatId),
+            $cmd === '/setup'                   => $this->handleSetup($chatId, $param),
+            $cmd === '/journal'                 => $this->handleJournal($chatId, $param),
+            $cmd === '/checklist'               => $this->handleChecklist($chatId),
+            $cmd === '/reel'                    => $this->handleReel($chatId, $param),
+            $cmd === '/psych'                   => $this->handlePsych($chatId, $param),
+            default                             => $this->handleGeneral($chatId, $text),
         };
     }
 
-    // ─── تشخیص زبان ──────────────────────────────────────────────────────────
-    private function detectLanguage(string $text): string
-    {
-        // حروف فارسی/عربی
-        if (preg_match('/[\x{0600}-\x{06FF}]/u', $text)) {
-            return 'fa';
-        }
-        // حروف عربی
-        if (preg_match('/[\x{0750}-\x{077F}]/u', $text)) {
-            return 'ar';
-        }
-        return 'en';
-    }
-
-    // ─── دستورالعمل زبان برای هوش مصنوعی ────────────────────────────────────
-    private function langInstruction(string $lang): string
-    {
-        return match($lang) {
-            'fa' => "\n\nمهم: پاسخ را کاملاً به زبان فارسی بنویس. از اصطلاحات تخصصی معاملاتی انگلیسی مانند ICT، SMC، OB، FVG، BOS، CHoCH می‌توانی استفاده کنی ولی توضیحات باید فارسی باشد.",
-            'ar' => "\n\nمهم: اكتب الإجابة باللغة العربية بالكامل. يمكنك استخدام المصطلحات التقنية الإنجليزية مثل ICT وSMC.",
-            default => '',
-        };
-    }
-
-    // ─── هدرهای پیام بر اساس زبان ────────────────────────────────────────────
-    private function headers(string $lang): array
-    {
-        return match($lang) {
-            'fa' => [
-                'market'    => '🪙 *تحلیل بازار — ICT/SMC*',
-                'mtf'       => '📊 *تحلیل چندتایم‌فریمی*',
-                'session'   => '🕐 *وضعیت سشن بازار*',
-                'news'      => '📅 *رویدادهای اقتصادی امروز*',
-                'setup'     => '🔍 *تحلیل ستاپ معاملاتی*',
-                'journal'   => '📋 *ژورنال معاملاتی*',
-                'checklist' => '✅ *چک‌لیست روزانه اونیگاما*',
-                'reel'      => '🎬 *ایده ریل اونیگاما*',
-                'psych'     => '🧘 *روانشناسی معاملاتی*',
-                'clear'     => "🧹 *حافظه مکالمه پاک شد.*\n\nمکالمه جدید را شروع کن.",
-                'no_data'   => '⚠️ دریافت داده‌های بازار ناموفق بود. لطفاً دوباره تلاش کن.',
-                'no_param_setup'  => "📝 ستاپ را توضیح بده:\n`/setup XAUUSD sell 15m, OB at 4650`",
-                'no_param_journal'=> "📝 معامله‌ات را ثبت کن:\n`/journal buy XAUUSD 4511 tp 4580 sl 4490`",
-                'no_param_reel'   => "📝 موضوع ریل:\n`/reel روانشناسی معاملاتی`",
-                'no_param_psych'  => 'Help me build mental discipline for trading.',
-            ],
-            default => [
-                'market'    => '🪙 *Market Analysis — ICT/SMC*',
-                'mtf'       => '📊 *Multi-Timeframe Analysis*',
-                'session'   => '🕐 *Market Session Intelligence*',
-                'news'      => '📅 *Economic Events Today*',
-                'setup'     => '🔍 *Trade Setup Analysis*',
-                'journal'   => '📋 *Trade Journal Review*',
-                'checklist' => '✅ *Onigama Daily Checklist*',
-                'reel'      => '🎬 *Onigama Reel Strategy*',
-                'psych'     => '🧘 *Trading Psychology*',
-                'clear'     => "🧹 *Memory cleared.*\n\nStart a new conversation.",
-                'no_data'   => '⚠️ Failed to fetch market data. Please try again.',
-                'no_param_setup'  => "📝 Describe your setup:\n`/setup XAUUSD sell 15m, OB at 4650`",
-                'no_param_journal'=> "📝 Log your trade:\n`/journal buy XAUUSD 4511 tp 4580 sl 4490`",
-                'no_param_reel'   => "📝 Enter reel topic:\n`/reel trading psychology`",
-                'no_param_psych'  => 'Help me build mental discipline for trading.',
-            ],
-        };
-    }
-
-    private function handleHelp(int|string $chatId, string $lang): void
+    private function handleHelp(int|string $chatId): void
     {
         $this->memory->clearHistory($chatId);
-        $msg = $lang === 'fa' ? $this->helpFa() : Prompts::help();
-        $this->telegram->sendMessage($chatId, $msg);
+        $this->telegram->sendMessage($chatId, Prompts::help());
     }
 
-    private function helpFa(): string
-    {
-        return
-            "🧠 *اونیگاما هوش مصنوعی — سیستم هوش مالی*\n\n" .
-            "━━━━━━━━━━━━━━━━━━━━\n" .
-            "📌 *تحلیل بازار:*\n" .
-            "🪙 `/gold` — تحلیل لایو XAUUSD\n" .
-            "💶 `/eurusd` — تحلیل EUR/USD\n" .
-            "💷 `/gbpusd` — تحلیل GBP/USD\n" .
-            "💴 `/usdjpy` — تحلیل USD/JPY\n" .
-            "🇨🇭 `/usdchf` — تحلیل USD/CHF\n" .
-            "📊 `/mtf [نماد]` — تحلیل چندتایم‌فریمی\n\n" .
-            "📌 *ابزارهای معاملاتی:*\n" .
-            "🕐 `/session` — وضعیت سشن فعلی\n" .
-            "📅 `/news` — رویدادهای اقتصادی امروز\n" .
-            "🔍 `/setup [توضیح]` — تحلیل ستاپ\n" .
-            "📋 `/journal [معامله]` — ژورنال معاملاتی\n" .
-            "✅ `/checklist` — چک‌لیست روزانه\n\n" .
-            "📌 *محتوا و برند:*\n" .
-            "🎬 `/reel [موضوع]` — ایده ریل اینستاگرام\n" .
-            "🧘 `/psych [موضوع]` — روانشناسی معاملاتی\n\n" .
-            "📌 *سیستم:*\n" .
-            "🗑 `/clear` — پاک کردن حافظه مکالمه\n" .
-            "❓ `/help` — این راهنما\n" .
-            "━━━━━━━━━━━━━━━━━━━━\n" .
-            "_دقت بر تعداد. ورود تک‌تیرانداز. منطق نهادی._";
-    }
-
-    private function handleClear(int|string $chatId, string $lang): void
+    private function handleClear(int|string $chatId): void
     {
         $this->memory->clearHistory($chatId);
-        $h = $this->headers($lang);
-        $this->telegram->sendMessage($chatId, $h['clear']);
+        $this->telegram->sendMessage($chatId, "🧹 *Memory cleared.*\n\nStart a new conversation.");
     }
 
-    private function handleMarket(int|string $chatId, string $symbol, string $lang): void
+    private function handleMarket(int|string $chatId, string $symbol): void
     {
-        $h = $this->headers($lang);
         $prompts = [
             'XAUUSD' => Prompts::gold(),
             'EURUSD' => Prompts::eurusd(),
@@ -180,99 +81,86 @@ class Router
             'USDCHF' => Prompts::usdchf(),
         ];
 
-        $marketData = $this->market->getMarketData($symbol);
-        if (!$marketData) {
-            $this->telegram->sendMessage($chatId, $h['no_data']);
+        $data = $this->market->getMarketData($symbol);
+        if (!$data) {
+            $this->telegram->sendMessage($chatId, '⚠️ Failed to fetch market data. Please try again.');
             return;
         }
 
-        $prompt   = $prompts[$symbol] . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $marketData, 400);
-
-        $title    = $h['market'] . " — {$symbol}";
-        $msg      = MessageFormatter::market($symbol, $analysis);
-        $this->telegram->sendMessage($chatId, $msg);
+        $analysis = $this->openRouter->chat($prompts[$symbol], $data, 400);
+        $this->telegram->sendMessage($chatId, MessageFormatter::market($symbol, $analysis));
     }
 
-    private function handleMTF(int|string $chatId, string $symbol, string $lang): void
+    private function handleMTF(int|string $chatId, string $symbol): void
     {
-        $h      = $this->headers($lang);
         $symbol = strtoupper(trim($symbol)) ?: 'XAUUSD';
         $data   = $this->market->getMarketData($symbol);
-        if (!$data) { $this->telegram->sendMessage($chatId, $h['no_data']); return; }
-
-        $prompt   = Prompts::mtf() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, "Symbol: {$symbol}\n{$data}", 450);
-        $this->telegram->sendMessage($chatId, "{$h['mtf']} — {$symbol}\n\n" . $analysis);
+        if (!$data) { $this->telegram->sendMessage($chatId, '⚠️ Failed to fetch data.'); return; }
+        $analysis = $this->openRouter->chat(Prompts::mtf(), "Symbol: {$symbol}\n{$data}", 450);
+        $this->telegram->sendMessage($chatId, MessageFormatter::mtf($symbol, $analysis));
     }
 
-    private function handleSession(int|string $chatId, string $lang): void
+    private function handleSession(int|string $chatId): void
     {
-        $h        = $this->headers($lang);
         $data     = $this->market->getSessionInfo();
-        $prompt   = Prompts::session() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $data, 350);
-        $this->telegram->sendMessage($chatId, "{$h['session']}\n\n" . $analysis);
+        $analysis = $this->openRouter->chat(Prompts::session(), $data, 350);
+        $this->telegram->sendMessage($chatId, MessageFormatter::session($analysis));
     }
 
-    private function handleNews(int|string $chatId, string $lang): void
+    private function handleNews(int|string $chatId): void
     {
-        $h        = $this->headers($lang);
         $data     = $this->market->getEconomicEvents();
-        $prompt   = Prompts::news() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $data, 350);
-        $this->telegram->sendMessage($chatId, "{$h['news']}\n\n" . $analysis);
+        $analysis = $this->openRouter->chat(Prompts::news(), $data, 350);
+        $this->telegram->sendMessage($chatId, MessageFormatter::news($analysis));
     }
 
-    private function handleSetup(int|string $chatId, string $param, string $lang): void
+    private function handleSetup(int|string $chatId, string $param): void
     {
-        $h = $this->headers($lang);
-        if (!$param) { $this->telegram->sendMessage($chatId, $h['no_param_setup']); return; }
-        $prompt   = Prompts::setup() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $param, 450);
-        $this->telegram->sendMessage($chatId, "{$h['setup']}\n\n" . $analysis);
+        if (!$param) {
+            $this->telegram->sendMessage($chatId, "📝 Describe your setup:\n`/setup XAUUSD sell 15m, OB at 4650, target 4511`");
+            return;
+        }
+        $analysis = $this->openRouter->chat(Prompts::setup(), $param, 450);
+        $this->telegram->sendMessage($chatId, MessageFormatter::setup($analysis));
     }
 
-    private function handleJournal(int|string $chatId, string $param, string $lang): void
+    private function handleJournal(int|string $chatId, string $param): void
     {
-        $h = $this->headers($lang);
-        if (!$param) { $this->telegram->sendMessage($chatId, $h['no_param_journal']); return; }
-        $prompt   = Prompts::journal() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $param, 450);
-        $this->telegram->sendMessage($chatId, "{$h['journal']}\n\n" . $analysis);
+        if (!$param) {
+            $this->telegram->sendMessage($chatId, "📝 Log your trade:\n`/journal buy XAUUSD 4511 tp 4580 sl 4490`");
+            return;
+        }
+        $analysis = $this->openRouter->chat(Prompts::journal(), $param, 450);
+        $this->telegram->sendMessage($chatId, MessageFormatter::journal($analysis));
     }
 
-    private function handleChecklist(int|string $chatId, string $lang): void
+    private function handleChecklist(int|string $chatId): void
     {
-        $h        = $this->headers($lang);
         $session  = $this->market->getSessionInfo();
-        $prompt   = Prompts::checklist() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $session, 500);
-        $this->telegram->sendMessage($chatId, "{$h['checklist']}\n\n" . $analysis);
+        $analysis = $this->openRouter->chat(Prompts::checklist(), $session, 500);
+        $this->telegram->sendMessage($chatId, MessageFormatter::checklist($analysis));
     }
 
-    private function handleReel(int|string $chatId, string $param, string $lang): void
+    private function handleReel(int|string $chatId, string $param): void
     {
-        $h = $this->headers($lang);
-        if (!$param) { $this->telegram->sendMessage($chatId, $h['no_param_reel']); return; }
-        $prompt   = Prompts::reel() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $param, 400);
-        $this->telegram->sendMessage($chatId, "{$h['reel']}\n\n" . $analysis);
+        if (!$param) {
+            $this->telegram->sendMessage($chatId, "📝 Enter reel topic:\n`/reel trading psychology`");
+            return;
+        }
+        $analysis = $this->openRouter->chat(Prompts::reel(), $param, 400);
+        $this->telegram->sendMessage($chatId, MessageFormatter::reel($analysis));
     }
 
-    private function handlePsych(int|string $chatId, string $param, string $lang): void
+    private function handlePsych(int|string $chatId, string $param): void
     {
-        $h       = $this->headers($lang);
-        $msg     = $param ?: $h['no_param_psych'];
-        $prompt  = Prompts::psychology() . $this->langInstruction($lang);
-        $analysis = $this->openRouter->chat($prompt, $msg, 450);
-        $this->telegram->sendMessage($chatId, "{$h['psych']}\n\n" . $analysis);
+        $msg      = $param ?: 'Help me build mental discipline for trading.';
+        $analysis = $this->openRouter->chat(Prompts::psychology(), $msg, 450);
+        $this->telegram->sendMessage($chatId, MessageFormatter::psychology($analysis));
     }
 
-    private function handleGeneral(int|string $chatId, string $text, string $lang): void
+    private function handleGeneral(int|string $chatId, string $text): void
     {
-        $prompt   = Prompts::general() . $this->langInstruction($lang);
-        $messages = $this->memory->buildMessages($chatId, $prompt, $text);
+        $messages = $this->memory->buildMessages($chatId, Prompts::general(), $text);
         $reply    = $this->openRouter->chatWithHistory($messages, 450);
         $this->memory->addUserMessage($chatId, $text);
         $this->memory->addAssistantMessage($chatId, $reply);
