@@ -2,3 +2,4 @@
 logs/
 *.log
 .DS_Store
+storage/chat_*.json

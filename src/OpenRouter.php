@@ -1,7 +1,5 @@
 <?php
-
 declare(strict_types=1);
-
 class OpenRouter
 {
     private string $apiKey;
@@ -14,7 +12,24 @@ class OpenRouter
         $this->logger = $logger;
     }
 
-    public function chat(string $systemPrompt, string $userMessage, int $maxTokens = 400): string
+    /**
+     * ارسال پیام با تاریخچه مکالمه
+     */
+    public function chatWithHistory(array $messages, int $maxTokens = 450): string
+    {
+        $payload = [
+            'model'      => AI_MODEL,
+            'max_tokens' => $maxTokens,
+            'messages'   => $messages,
+        ];
+
+        return $this->send($payload);
+    }
+
+    /**
+     * ارسال پیام ساده بدون تاریخچه
+     */
+    public function chat(string $systemPrompt, string $userMessage, int $maxTokens = 450): string
     {
         $payload = [
             'model'      => AI_MODEL,
@@ -25,6 +40,11 @@ class OpenRouter
             ],
         ];
 
+        return $this->send($payload);
+    }
+
+    private function send(array $payload): string
+    {
         $ch = curl_init($this->endpoint);
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
@@ -37,6 +57,7 @@ class OpenRouter
             ],
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 30,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
         ]);
 
         $response = curl_exec($ch);
@@ -45,14 +66,14 @@ class OpenRouter
         curl_close($ch);
 
         if ($error) {
-            $this->logger->error("خطای cURL هوش مصنوعی: $error");
+            $this->logger->error("خطای cURL: $error");
             return '⚠️ خطا در اتصال به سرویس هوش مصنوعی.';
         }
 
         $data = json_decode($response, true);
 
         if ($httpCode !== 200 || empty($data['choices'][0]['message']['content'])) {
-            $this->logger->error("پاسخ نامعتبر OpenRouter: HTTP $httpCode — " . $response);
+            $this->logger->error("پاسخ نامعتبر: HTTP $httpCode — " . $response);
             return '⚠️ پاسخی دریافت نشد. لطفاً دوباره تلاش کن.';
         }
 
