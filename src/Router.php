@@ -2,14 +2,17 @@
 declare(strict_types=1);
 require_once __DIR__ . '/Prompts.php';
 require_once __DIR__ . '/Memory.php';
+require_once __DIR__ . '/MessageFormatter.php';
+require_once __DIR__ . '/ImageGenerator.php';
 
 class Router
 {
-    private Telegram   $telegram;
-    private OpenRouter $openRouter;
-    private MarketData $market;
-    private Memory     $memory;
-    private Logger     $logger;
+    private Telegram       $telegram;
+    private OpenRouter     $openRouter;
+    private MarketData     $market;
+    private Memory         $memory;
+    private ImageGenerator $imgGen;
+    private Logger         $logger;
 
     public function __construct(Telegram $telegram, OpenRouter $openRouter, MarketData $market, Logger $logger)
     {
@@ -17,6 +20,7 @@ class Router
         $this->openRouter = $openRouter;
         $this->market     = $market;
         $this->memory     = new Memory();
+        $this->imgGen     = new ImageGenerator($logger);
         $this->logger     = $logger;
     }
 
@@ -36,23 +40,36 @@ class Router
         $param = trim(substr($text, strlen($cmd)));
 
         match(true) {
-            in_array($cmd, ['/start', '/help'])   => $this->handleHelp($chatId),
-            $cmd === '/clear'                      => $this->handleClear($chatId),
-            $cmd === '/gold'                       => $this->handleMarket($chatId, 'XAUUSD', Prompts::gold(), '🪙 XAUUSD — تحلیل ICT/SMC'),
-            $cmd === '/eurusd'                     => $this->handleMarket($chatId, 'EURUSD', Prompts::eurusd(), '💶 EUR/USD — تحلیل ICT/SMC'),
-            $cmd === '/gbpusd'                     => $this->handleMarket($chatId, 'GBPUSD', Prompts::gbpusd(), '💷 GBP/USD — تحلیل ICT/SMC'),
-            $cmd === '/usdjpy'                     => $this->handleMarket($chatId, 'USDJPY', Prompts::usdjpy(), '💴 USD/JPY — تحلیل ICT/SMC'),
-            $cmd === '/usdchf'                     => $this->handleMarket($chatId, 'USDCHF', Prompts::usdchf(), '🇨🇭 USD/CHF — تحلیل ICT/SMC'),
-            $cmd === '/mtf'                        => $this->handleMTF($chatId, $param),
-            $cmd === '/session'                    => $this->handleSession($chatId),
-            $cmd === '/news'                       => $this->handleNews($chatId),
-            $cmd === '/setup'                      => $this->handleSetup($chatId, $param),
-            $cmd === '/journal'                    => $this->handleJournal($chatId, $param),
-            $cmd === '/checklist'                  => $this->handleChecklist($chatId),
-            $cmd === '/reel'                       => $this->handleReel($chatId, $param),
-            $cmd === '/psych'                      => $this->handlePsych($chatId, $param),
-            default                                => $this->handleGeneral($chatId, $text),
+            in_array($cmd, ['/start', '/help']) => $this->handleHelp($chatId),
+            $cmd === '/clear'                   => $this->handleClear($chatId),
+            $cmd === '/gold'                    => $this->handleMarket($chatId, 'XAUUSD'),
+            $cmd === '/eurusd'                  => $this->handleMarket($chatId, 'EURUSD'),
+            $cmd === '/gbpusd'                  => $this->handleMarket($chatId, 'GBPUSD'),
+            $cmd === '/usdjpy'                  => $this->handleMarket($chatId, 'USDJPY'),
+            $cmd === '/usdchf'                  => $this->handleMarket($chatId, 'USDCHF'),
+            $cmd === '/mtf'                     => $this->handleMTF($chatId, $param),
+            $cmd === '/session'                 => $this->handleSession($chatId),
+            $cmd === '/news'                    => $this->handleNews($chatId),
+            $cmd === '/setup'                   => $this->handleSetup($chatId, $param),
+            $cmd === '/journal'                 => $this->handleJournal($chatId, $param),
+            $cmd === '/checklist'               => $this->handleChecklist($chatId),
+            $cmd === '/reel'                    => $this->handleReel($chatId, $param),
+            $cmd === '/psych'                   => $this->handlePsych($chatId, $param),
+            default                             => $this->handleGeneral($chatId, $text),
         };
+    }
+
+    // ─── ارسال تصویر یا متن در صورت شکست ────────────────────
+    private function sendImageOrText(int|string $chatId, ?string $imgPath, string $fallbackText): void
+    {
+        if ($imgPath && file_exists($imgPath)) {
+            $sent = $this->telegram->sendPhoto($chatId, $imgPath);
+            if (!$sent) {
+                $this->telegram->sendMessage($chatId, $fallbackText);
+            }
+        } else {
+            $this->telegram->sendMessage($chatId, $fallbackText);
+        }
     }
 
     private function handleHelp(int|string $chatId): void
@@ -64,72 +81,110 @@ class Router
     private function handleClear(int|string $chatId): void
     {
         $this->memory->clearHistory($chatId);
-        $this->telegram->sendMessage($chatId, "🧹 *حافظه مکالمه پاک شد.*\n\nمکالمه جدید را شروع کن.");
+        $this->telegram->sendMessage($chatId,
+            "🧹 *حافظه مکالمه پاک شد.*\n\nمکالمه جدید را شروع کن."
+        );
     }
 
-    private function handleMarket(int|string $chatId, string $symbol, string $prompt, string $title): void
+    private function handleMarket(int|string $chatId, string $symbol): void
     {
-        $data = $this->market->getMarketData($symbol);
-        if (!$data) {
-            $this->telegram->sendMessage($chatId, '⚠️ دریافت داده‌های بازار ناموفق بود. لطفاً دوباره تلاش کن.');
+        $prompts = [
+            'XAUUSD' => Prompts::gold(),
+            'EURUSD' => Prompts::eurusd(),
+            'GBPUSD' => Prompts::gbpusd(),
+            'USDJPY' => Prompts::usdjpy(),
+            'USDCHF' => Prompts::usdchf(),
+        ];
+
+        $marketData = $this->market->getMarketData($symbol);
+        if (!$marketData) {
+            $this->telegram->sendMessage($chatId, '⚠️ دریافت داده‌های بازار ناموفق بود.');
             return;
         }
-        $reply = $this->openRouter->chat($prompt, $data, 400);
-        $this->telegram->sendMessage($chatId, "*{$title}*\n\n" . $reply);
+
+        $analysis  = $this->openRouter->chat($prompts[$symbol], $marketData, 400);
+        $rows      = $this->imgGen->parseAnalysis($analysis);
+        $priceData = $this->market->getPriceData($symbol);
+
+        $imgPath   = $this->imgGen->market($symbol, $rows, $priceData);
+        $fallback  = MessageFormatter::market($symbol, $analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleMTF(int|string $chatId, string $symbol): void
     {
-        $symbol = strtoupper(trim($symbol)) ?: 'XAUUSD';
-        $data   = $this->market->getMarketData($symbol);
-        if (!$data) {
-            $this->telegram->sendMessage($chatId, '⚠️ داده‌های بازار دریافت نشد.');
-            return;
-        }
-        $userMsg = "Symbol: {$symbol}\nMarket Data: {$data}\nProvide multi-timeframe ICT/SMC analysis.";
-        $reply   = $this->openRouter->chat(Prompts::mtf(), $userMsg, 450);
-        $this->telegram->sendMessage($chatId, "*📊 تحلیل چندتایم‌فریمی — {$symbol}*\n\n" . $reply);
+        $symbol   = strtoupper(trim($symbol)) ?: 'XAUUSD';
+        $data     = $this->market->getMarketData($symbol);
+        if (!$data) { $this->telegram->sendMessage($chatId, '⚠️ داده دریافت نشد.'); return; }
+
+        $analysis = $this->openRouter->chat(Prompts::mtf(), "Symbol: {$symbol}\n{$data}", 450);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('MULTI-TIMEFRAME', "{$symbol} — Top-Down Analysis", 'MTF', $rows);
+        $fallback = MessageFormatter::mtf($symbol, $analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleSession(int|string $chatId): void
     {
-        $data  = $this->market->getSessionInfo();
-        $reply = $this->openRouter->chat(Prompts::session(), $data, 350);
-        $this->telegram->sendMessage($chatId, "*🕐 وضعیت سشن بازار*\n\n" . $reply);
+        $data     = $this->market->getSessionInfo();
+        $analysis = $this->openRouter->chat(Prompts::session(), $data, 350);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('SESSION', 'Market Session Intelligence', 'SESSION', $rows);
+        $fallback = MessageFormatter::session($analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleNews(int|string $chatId): void
     {
-        $data  = $this->market->getEconomicEvents();
-        $reply = $this->openRouter->chat(Prompts::news(), $data, 350);
-        $this->telegram->sendMessage($chatId, "*📅 رویدادهای اقتصادی امروز*\n\n" . $reply);
+        $data     = $this->market->getEconomicEvents();
+        $analysis = $this->openRouter->chat(Prompts::news(), $data, 350);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('ECONOMIC', 'High-Impact Events Today', 'NEWS', $rows);
+        $fallback = MessageFormatter::news($analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleSetup(int|string $chatId, string $param): void
     {
         if (!$param) {
-            $this->telegram->sendMessage($chatId, "📝 ستاپ را توضیح بده:\n`/setup XAUUSD sell 15m, OB at 4650, target 4511, SL 4670`");
+            $this->telegram->sendMessage($chatId, "📝 ستاپ را توضیح بده:\n`/setup XAUUSD sell 15m, OB at 4650, target 4511`");
             return;
         }
-        $reply = $this->openRouter->chat(Prompts::setup(), $param, 450);
-        $this->telegram->sendMessage($chatId, "*🔍 تحلیل ستاپ معاملاتی*\n\n" . $reply);
+        $analysis = $this->openRouter->chat(Prompts::setup(), $param, 450);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('SETUP REVIEW', 'Trade Setup Analysis', 'SETUP', $rows);
+        $fallback = MessageFormatter::setup($analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleJournal(int|string $chatId, string $param): void
     {
         if (!$param) {
-            $this->telegram->sendMessage($chatId, "📝 معامله‌ات را ثبت کن:\n`/journal buy XAUUSD 4511 tp 4580 sl 4490 — result: win`");
+            $this->telegram->sendMessage($chatId, "📝 معامله‌ات را ثبت کن:\n`/journal buy XAUUSD 4511 tp 4580 sl 4490`");
             return;
         }
-        $reply = $this->openRouter->chat(Prompts::journal(), $param, 450);
-        $this->telegram->sendMessage($chatId, "*📋 ژورنال معاملاتی*\n\n" . $reply);
+        $analysis = $this->openRouter->chat(Prompts::journal(), $param, 450);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('JOURNAL', 'Trade Review', 'JOURNAL', $rows);
+        $fallback = MessageFormatter::journal($analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleChecklist(int|string $chatId): void
     {
-        $session = $this->market->getSessionInfo();
-        $reply   = $this->openRouter->chat(Prompts::checklist(), "Current market context:\n{$session}", 500);
-        $this->telegram->sendMessage($chatId, "*📋 چک‌لیست روزانه اونیگاما*\n\n" . $reply);
+        $session  = $this->market->getSessionInfo();
+        $analysis = $this->openRouter->chat(Prompts::checklist(), $session, 500);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('PROTOCOL', 'Daily Trading Checklist', 'CHECKLIST', $rows);
+        $fallback = MessageFormatter::checklist($analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleReel(int|string $chatId, string $param): void
@@ -138,15 +193,23 @@ class Router
             $this->telegram->sendMessage($chatId, "📝 موضوع ریل:\n`/reel trading psychology`");
             return;
         }
-        $reply = $this->openRouter->chat(Prompts::reel(), $param, 400);
-        $this->telegram->sendMessage($chatId, "*🎬 ایده ریل اونیگاما*\n\n" . $reply);
+        $analysis = $this->openRouter->chat(Prompts::reel(), $param, 400);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('CONTENT', 'Instagram Reel Strategy', 'REEL', $rows);
+        $fallback = MessageFormatter::reel($analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handlePsych(int|string $chatId, string $param): void
     {
-        $msg   = $param ?: 'Help me build mental discipline for trading.';
-        $reply = $this->openRouter->chat(Prompts::psychology(), $msg, 450);
-        $this->telegram->sendMessage($chatId, "*🧘 روانشناسی معاملاتی — Neurotrader*\n\n" . $reply);
+        $msg      = $param ?: 'Help me build mental discipline for trading.';
+        $analysis = $this->openRouter->chat(Prompts::psychology(), $msg, 450);
+        $rows     = $this->imgGen->parseAnalysis($analysis);
+        $imgPath  = $this->imgGen->text('NEUROTRADER', 'Trading Psychology', 'PSYCH', $rows);
+        $fallback = MessageFormatter::psychology($analysis);
+
+        $this->sendImageOrText($chatId, $imgPath, $fallback);
     }
 
     private function handleGeneral(int|string $chatId, string $text): void

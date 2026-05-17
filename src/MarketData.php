@@ -204,3 +204,34 @@ class MarketData
             "Analyze with institutional ICT/SMC precision.";
     }
 }
+
+    /**
+     * دریافت داده قیمت برای تصویر
+     */
+    public function getPriceData(string $symbol): array
+    {
+        if ($symbol === 'XAUUSD') {
+            $ch = curl_init('https://www.goldapi.io/api/XAU/USD');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 10,
+                CURLOPT_HTTPHEADER     => [
+                    'x-access-token: ' . $this->goldApiKey,
+                    'Content-Type: application/json',
+                ],
+            ]);
+            $response = curl_exec($ch);
+            curl_close($ch);
+            $data = json_decode($response, true);
+            if (!empty($data['price'])) {
+                return [
+                    'price'      => '$' . number_format($data['price'], 2),
+                    'change'     => ($data['ch'] < 0 ? '-$' : '+$') . number_format(abs($data['ch'] ?? 0), 2),
+                    'change_pct' => number_format(abs($data['chp'] ?? 0), 2),
+                    'high'       => number_format($data['high_price'] ?? 0, 2),
+                    'low'        => number_format($data['low_price']  ?? 0, 2),
+                ];
+            }
+        }
+        return [];
+    }
