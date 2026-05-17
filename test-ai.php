@@ -5,14 +5,17 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_TIMEOUT        => 15,
     CURLOPT_POST           => true,
+    CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
     CURLOPT_POSTFIELDS     => json_encode([
         'model'      => 'meta-llama/llama-3.3-8b-instruct:free',
         'max_tokens' => 50,
         'messages'   => [['role' => 'user', 'content' => 'say hello']],
     ]),
-    CURLOPT_HTTPHEADER     => [
+    CURLOPT_HTTPHEADER => [
         'Content-Type: application/json',
         'Authorization: Bearer ' . $key,
+        'HTTP-Referer: https://onigamafx.com',
+        'X-Title: Onigama AI Brain',
     ],
 ]);
 $response = curl_exec($ch);
@@ -20,4 +23,8 @@ $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $error    = curl_error($ch);
 curl_close($ch);
 header('Content-Type: application/json');
-echo json_encode(['http_code' => $httpCode, 'curl_error' => $error, 'key_prefix' => substr($key, 0, 10) . '...', 'response' => json_decode($response, true) ?? $response], JSON_PRETTY_PRINT);
+echo json_encode([
+    'http_code'  => $httpCode,
+    'curl_error' => $error,
+    'response'   => json_decode($response, true) ?? $response,
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
