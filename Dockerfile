@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libfreetype6-dev \
     libwebp-dev \
+    libcurl4-openssl-dev \
+    pkg-config \
     && docker-php-ext-configure gd \
         --with-freetype \
         --with-jpeg \
@@ -14,7 +16,5 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 COPY . /app
-
-EXPOSE 8080
 
 CMD php -S 0.0.0.0:$PORT
