@@ -7,15 +7,15 @@ class Router
 {
     private Telegram   $telegram;
     private OpenRouter $openRouter;
-    private TwelveData $twelveData;
+    private MarketData $market;
     private Memory     $memory;
     private Logger     $logger;
 
-    public function __construct(Telegram $telegram, OpenRouter $openRouter, TwelveData $twelveData, Logger $logger)
+    public function __construct(Telegram $telegram, OpenRouter $openRouter, MarketData $market, Logger $logger)
     {
         $this->telegram   = $telegram;
         $this->openRouter = $openRouter;
-        $this->twelveData = $twelveData;
+        $this->market     = $market;
         $this->memory     = new Memory();
         $this->logger     = $logger;
     }
@@ -29,26 +29,30 @@ class Router
         $text   = trim($message['text'] ?? '');
         if (!$text) return;
 
-        $this->logger->info("پیام از $chatId: " . mb_substr($text, 0, 80));
+        $this->logger->info("پیام از $chatId: " . mb_substr($text, 0, 100));
         $this->telegram->sendTyping($chatId);
 
-        if ($text === '/start' || $text === '/help') {
-            $this->handleHelp($chatId);
-        } elseif ($text === '/clear') {
-            $this->handleClear($chatId);
-        } elseif (str_starts_with($text, '/gold')) {
-            $this->handleGold($chatId);
-        } elseif (str_starts_with($text, '/reel')) {
-            $this->handleReel($chatId, trim(substr($text, 5)));
-        } elseif (str_starts_with($text, '/psych')) {
-            $this->handlePsych($chatId, trim(substr($text, 6)));
-        } elseif (str_starts_with($text, '/checklist')) {
-            $this->handleChecklist($chatId);
-        } elseif (str_starts_with($text, '/setup')) {
-            $this->handleSetup($chatId, trim(substr($text, 6)));
-        } else {
-            $this->handleGeneral($chatId, $text);
-        }
+        $cmd   = strtolower(explode(' ', $text)[0]);
+        $param = trim(substr($text, strlen($cmd)));
+
+        match(true) {
+            in_array($cmd, ['/start', '/help'])   => $this->handleHelp($chatId),
+            $cmd === '/clear'                      => $this->handleClear($chatId),
+            $cmd === '/gold'                       => $this->handleMarket($chatId, 'XAUUSD', Prompts::gold(), '🪙 XAUUSD — تحلیل ICT/SMC'),
+            $cmd === '/eurusd'                     => $this->handleMarket($chatId, 'EURUSD', Prompts::eurusd(), '💶 EUR/USD — تحلیل ICT/SMC'),
+            $cmd === '/gbpusd'                     => $this->handleMarket($chatId, 'GBPUSD', Prompts::gbpusd(), '💷 GBP/USD — تحلیل ICT/SMC'),
+            $cmd === '/usdjpy'                     => $this->handleMarket($chatId, 'USDJPY', Prompts::usdjpy(), '💴 USD/JPY — تحلیل ICT/SMC'),
+            $cmd === '/usdchf'                     => $this->handleMarket($chatId, 'USDCHF', Prompts::usdchf(), '🇨🇭 USD/CHF — تحلیل ICT/SMC'),
+            $cmd === '/mtf'                        => $this->handleMTF($chatId, $param),
+            $cmd === '/session'                    => $this->handleSession($chatId),
+            $cmd === '/news'                       => $this->handleNews($chatId),
+            $cmd === '/setup'                      => $this->handleSetup($chatId, $param),
+            $cmd === '/journal'                    => $this->handleJournal($chatId, $param),
+            $cmd === '/checklist'                  => $this->handleChecklist($chatId),
+            $cmd === '/reel'                       => $this->handleReel($chatId, $param),
+            $cmd === '/psych'                      => $this->handlePsych($chatId, $param),
+            default                                => $this->handleGeneral($chatId, $text),
+        };
     }
 
     private function handleHelp(int|string $chatId): void
@@ -60,65 +64,97 @@ class Router
     private function handleClear(int|string $chatId): void
     {
         $this->memory->clearHistory($chatId);
-        $this->telegram->sendMessage($chatId, "🧹 *حافظه مکالمه پاک شد.*\n\nمی‌توانی مکالمه جدید را شروع کنی.");
+        $this->telegram->sendMessage($chatId, "🧹 *حافظه مکالمه پاک شد.*\n\nمکالمه جدید را شروع کن.");
     }
 
-    private function handleGold(int|string $chatId): void
+    private function handleMarket(int|string $chatId, string $symbol, string $prompt, string $title): void
     {
-        $candles = $this->twelveData->getGoldCandles();
-        if (!$candles) {
+        $data = $this->market->getMarketData($symbol);
+        if (!$data) {
             $this->telegram->sendMessage($chatId, '⚠️ دریافت داده‌های بازار ناموفق بود. لطفاً دوباره تلاش کن.');
             return;
         }
-        // تحلیل طلا بدون حافظه — هر بار داده لایو جدید است
-        $reply = $this->openRouter->chat(Prompts::gold(), $candles, 400);
-        $this->telegram->sendMessage($chatId, "🪙 *XAUUSD — تحلیل ICT/SMC*\n\n" . $reply);
+        $reply = $this->openRouter->chat($prompt, $data, 400);
+        $this->telegram->sendMessage($chatId, "*{$title}*\n\n" . $reply);
     }
 
-    private function handleReel(int|string $chatId, string $topic): void
+    private function handleMTF(int|string $chatId, string $symbol): void
     {
-        if (!$topic) {
-            $this->telegram->sendMessage($chatId, "📝 موضوع ریل را بنویس:\nمثال: `/reel trading psychology`");
+        $symbol = strtoupper(trim($symbol)) ?: 'XAUUSD';
+        $data   = $this->market->getMarketData($symbol);
+        if (!$data) {
+            $this->telegram->sendMessage($chatId, '⚠️ داده‌های بازار دریافت نشد.');
             return;
         }
-        $reply = $this->openRouter->chat(Prompts::reel(), $topic, 400);
-        $this->telegram->sendMessage($chatId, "🎬 *ایده ریل اونیگاما*\n\n" . $reply);
+        $userMsg = "Symbol: {$symbol}\nMarket Data: {$data}\nProvide multi-timeframe ICT/SMC analysis.";
+        $reply   = $this->openRouter->chat(Prompts::mtf(), $userMsg, 450);
+        $this->telegram->sendMessage($chatId, "*📊 تحلیل چندتایم‌فریمی — {$symbol}*\n\n" . $reply);
     }
 
-    private function handlePsych(int|string $chatId, string $topic): void
+    private function handleSession(int|string $chatId): void
     {
-        $msg = $topic ?: 'Help me build mental discipline and emotional control for trading.';
-        $reply = $this->openRouter->chat(Prompts::psychology(), $msg, 450);
-        $this->telegram->sendMessage($chatId, "🧘 *روانشناسی معاملاتی — Neurotrader*\n\n" . $reply);
+        $data  = $this->market->getSessionInfo();
+        $reply = $this->openRouter->chat(Prompts::session(), $data, 350);
+        $this->telegram->sendMessage($chatId, "*🕐 وضعیت سشن بازار*\n\n" . $reply);
+    }
+
+    private function handleNews(int|string $chatId): void
+    {
+        $data  = $this->market->getEconomicEvents();
+        $reply = $this->openRouter->chat(Prompts::news(), $data, 350);
+        $this->telegram->sendMessage($chatId, "*📅 رویدادهای اقتصادی امروز*\n\n" . $reply);
+    }
+
+    private function handleSetup(int|string $chatId, string $param): void
+    {
+        if (!$param) {
+            $this->telegram->sendMessage($chatId, "📝 ستاپ را توضیح بده:\n`/setup XAUUSD sell 15m, OB at 4650, target 4511, SL 4670`");
+            return;
+        }
+        $reply = $this->openRouter->chat(Prompts::setup(), $param, 450);
+        $this->telegram->sendMessage($chatId, "*🔍 تحلیل ستاپ معاملاتی*\n\n" . $reply);
+    }
+
+    private function handleJournal(int|string $chatId, string $param): void
+    {
+        if (!$param) {
+            $this->telegram->sendMessage($chatId, "📝 معامله‌ات را ثبت کن:\n`/journal buy XAUUSD 4511 tp 4580 sl 4490 — result: win`");
+            return;
+        }
+        $reply = $this->openRouter->chat(Prompts::journal(), $param, 450);
+        $this->telegram->sendMessage($chatId, "*📋 ژورنال معاملاتی*\n\n" . $reply);
     }
 
     private function handleChecklist(int|string $chatId): void
     {
-        $reply = $this->openRouter->chat(Prompts::checklist(), "Generate today's professional trading checklist for XAUUSD.", 450);
-        $this->telegram->sendMessage($chatId, "📋 *چک‌لیست روزانه معامله‌گر اونیگاما*\n\n" . $reply);
+        $session = $this->market->getSessionInfo();
+        $reply   = $this->openRouter->chat(Prompts::checklist(), "Current market context:\n{$session}", 500);
+        $this->telegram->sendMessage($chatId, "*📋 چک‌لیست روزانه اونیگاما*\n\n" . $reply);
     }
 
-    private function handleSetup(int|string $chatId, string $topic): void
+    private function handleReel(int|string $chatId, string $param): void
     {
-        if (!$topic) {
-            $this->telegram->sendMessage($chatId, "📝 ستاپ معاملاتی‌ات را توضیح بده:\nمثال: `/setup XAUUSD sell on 15m, OB at 4650, targeting 4511`");
+        if (!$param) {
+            $this->telegram->sendMessage($chatId, "📝 موضوع ریل:\n`/reel trading psychology`");
             return;
         }
-        $reply = $this->openRouter->chat(Prompts::setup(), $topic, 450);
-        $this->telegram->sendMessage($chatId, "🔍 *تحلیل ستاپ معاملاتی*\n\n" . $reply);
+        $reply = $this->openRouter->chat(Prompts::reel(), $param, 400);
+        $this->telegram->sendMessage($chatId, "*🎬 ایده ریل اونیگاما*\n\n" . $reply);
+    }
+
+    private function handlePsych(int|string $chatId, string $param): void
+    {
+        $msg   = $param ?: 'Help me build mental discipline for trading.';
+        $reply = $this->openRouter->chat(Prompts::psychology(), $msg, 450);
+        $this->telegram->sendMessage($chatId, "*🧘 روانشناسی معاملاتی — Neurotrader*\n\n" . $reply);
     }
 
     private function handleGeneral(int|string $chatId, string $text): void
     {
-        // ساخت پیام‌ها با تاریخچه مکالمه
         $messages = $this->memory->buildMessages($chatId, Prompts::general(), $text);
-
-        $reply = $this->openRouter->chatWithHistory($messages, 450);
-
-        // ذخیره پیام کاربر و پاسخ در حافظه
+        $reply    = $this->openRouter->chatWithHistory($messages, 450);
         $this->memory->addUserMessage($chatId, $text);
         $this->memory->addAssistantMessage($chatId, $reply);
-
         $this->telegram->sendMessage($chatId, $reply);
     }
 }

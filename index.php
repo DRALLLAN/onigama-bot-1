@@ -6,12 +6,12 @@ require_once __DIR__ . '/src/Logger.php';
 require_once __DIR__ . '/src/Memory.php';
 require_once __DIR__ . '/src/Telegram.php';
 require_once __DIR__ . '/src/OpenRouter.php';
-require_once __DIR__ . '/src/TwelveData.php';
+require_once __DIR__ . '/src/MarketData.php';
 require_once __DIR__ . '/src/Router.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(200);
-    echo json_encode(['status' => 'Onigama AI Brain is running.']);
+    echo json_encode(['status' => 'Onigama AI Brain is running.', 'version' => '2.0']);
     exit;
 }
 
@@ -26,9 +26,9 @@ if (!$update || !isset($update['message'])) {
 $logger     = new Logger();
 $telegram   = new Telegram(TELEGRAM_TOKEN, $logger);
 $openRouter = new OpenRouter(OPENROUTER_KEY, $logger);
-$twelveData = new TwelveData(TWELVEDATA_KEY, $logger);
+$market     = new MarketData(GOLDAPI_KEY, $logger);
 
-$router = new Router($telegram, $openRouter, $twelveData, $logger);
+$router = new Router($telegram, $openRouter, $market, $logger);
 $router->handle($update);
 
 http_response_code(200);
