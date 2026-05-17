@@ -1,139 +1,90 @@
 <?php
-
 declare(strict_types=1);
-
 require_once __DIR__ . '/Prompts.php';
-
 class Router
 {
     private Telegram   $telegram;
     private OpenRouter $openRouter;
     private TwelveData $twelveData;
     private Logger     $logger;
-
-    public function __construct(
-        Telegram   $telegram,
-        OpenRouter $openRouter,
-        TwelveData $twelveData,
-        Logger     $logger
-    ) {
+    public function __construct(Telegram $telegram, OpenRouter $openRouter, TwelveData $twelveData, Logger $logger)
+    {
         $this->telegram   = $telegram;
         $this->openRouter = $openRouter;
         $this->twelveData = $twelveData;
         $this->logger     = $logger;
     }
-
     public function handle(array $update): void
     {
         $message = $update['message'] ?? null;
         if (!$message) return;
-
         $chatId = $message['chat']['id'];
         $text   = trim($message['text'] ?? '');
-
         if (!$text) return;
-
-        $this->logger->info("پیام دریافت شد از $chatId: " . mb_substr($text, 0, 80));
-
-        // نشانه تایپ نمایش داده می‌شود
+        $this->logger->info("پیام از $chatId: " . mb_substr($text, 0, 80));
         $this->telegram->sendTyping($chatId);
-
-        // مسیریابی بر اساس دستور
         if ($text === '/start' || $text === '/help') {
             $this->handleHelp($chatId);
-
         } elseif (str_starts_with($text, '/gold')) {
             $this->handleGold($chatId);
-
         } elseif (str_starts_with($text, '/reel')) {
-            $topic = trim(substr($text, 5));
-            $this->handleReel($chatId, $topic);
-
+            $this->handleReel($chatId, trim(substr($text, 5)));
         } elseif (str_starts_with($text, '/psych')) {
-            $topic = trim(substr($text, 6));
-            $this->handlePsych($chatId, $topic);
-
+            $this->handlePsych($chatId, trim(substr($text, 6)));
+        } elseif (str_starts_with($text, '/checklist')) {
+            $this->handleChecklist($chatId);
+        } elseif (str_starts_with($text, '/setup')) {
+            $this->handleSetup($chatId, trim(substr($text, 6)));
         } else {
             $this->handleGeneral($chatId, $text);
         }
     }
-
-    // ─── راهنما ───────────────────────────────────────────────────────────────
-
     private function handleHelp(int|string $chatId): void
     {
         $this->telegram->sendMessage($chatId, Prompts::help());
     }
-
-    // ─── تحلیل طلا ───────────────────────────────────────────────────────────
-
     private function handleGold(int|string $chatId): void
     {
-        $candles = $this->twelveData->getGoldCandles('15min', 5);
-
+        $candles = $this->twelveData->getGoldCandles();
         if (!$candles) {
-            $this->telegram->sendMessage(
-                $chatId,
-                '⚠️ دریافت داده‌های بازار ناموفق بود. لطفاً دوباره تلاش کن.'
-            );
+            $this->telegram->sendMessage($chatId, '⚠️ دریافت داده‌های بازار ناموفق بود. لطفاً دوباره تلاش کن.');
             return;
         }
-
-        $reply = $this->openRouter->chat(
-            Prompts::gold(),
-            $candles,
-            300
-        );
-
-        $this->telegram->sendMessage($chatId, "🪙 *XAUUSD — تحلیل ۱۵ دقیقه‌ای*\n\n" . $reply);
+        $reply = $this->openRouter->chat(Prompts::gold(), $candles, 400);
+        $this->telegram->sendMessage($chatId, "🪙 *XAUUSD — تحلیل ICT/SMC*\n\n" . $reply);
     }
-
-    // ─── ایده ریل ────────────────────────────────────────────────────────────
-
     private function handleReel(int|string $chatId, string $topic): void
     {
         if (!$topic) {
-            $this->telegram->sendMessage(
-                $chatId,
-                '📝 موضوع ریل را بنویس:\nمثال: `/reel trading psychology`'
-            );
+            $this->telegram->sendMessage($chatId, "📝 موضوع ریل را بنویس:\nمثال: `/reel trading psychology`");
             return;
         }
-
-        $reply = $this->openRouter->chat(
-            Prompts::reel(),
-            $topic,
-            350
-        );
-
-        $this->telegram->sendMessage($chatId, "🎬 *ایده ریل اینستاگرام*\n\n" . $reply);
+        $reply = $this->openRouter->chat(Prompts::reel(), $topic, 400);
+        $this->telegram->sendMessage($chatId, "🎬 *ایده ریل اونیگاما*\n\n" . $reply);
     }
-
-    // ─── روانشناسی معاملاتی ──────────────────────────────────────────────────
-
     private function handlePsych(int|string $chatId, string $topic): void
     {
-        $userMessage = $topic ?: 'Help me with trading psychology and mental discipline.';
-
-        $reply = $this->openRouter->chat(
-            Prompts::psychology(),
-            $userMessage,
-            400
-        );
-
-        $this->telegram->sendMessage($chatId, "🧘 *روانشناسی معاملاتی*\n\n" . $reply);
+        $msg = $topic ?: 'Help me build mental discipline and emotional control for trading.';
+        $reply = $this->openRouter->chat(Prompts::psychology(), $msg, 450);
+        $this->telegram->sendMessage($chatId, "🧘 *روانشناسی معاملاتی — Neurotrader*\n\n" . $reply);
     }
-
-    // ─── دستیار عمومی ────────────────────────────────────────────────────────
-
+    private function handleChecklist(int|string $chatId): void
+    {
+        $reply = $this->openRouter->chat(Prompts::checklist(), "Generate today's professional trading checklist for XAUUSD.", 450);
+        $this->telegram->sendMessage($chatId, "📋 *چک‌لیست روزانه معامله‌گر اونیگاما*\n\n" . $reply);
+    }
+    private function handleSetup(int|string $chatId, string $topic): void
+    {
+        if (!$topic) {
+            $this->telegram->sendMessage($chatId, "📝 ستاپ معاملاتی‌ات را توضیح بده:\nمثال: `/setup XAUUSD buy on 15m, OB at 3280, targeting 3310`");
+            return;
+        }
+        $reply = $this->openRouter->chat(Prompts::setup(), $topic, 450);
+        $this->telegram->sendMessage($chatId, "🔍 *تحلیل ستاپ معاملاتی*\n\n" . $reply);
+    }
     private function handleGeneral(int|string $chatId, string $text): void
     {
-        $reply = $this->openRouter->chat(
-            Prompts::general(),
-            $text,
-            400
-        );
-
+        $reply = $this->openRouter->chat(Prompts::general(), $text, 450);
         $this->telegram->sendMessage($chatId, $reply);
     }
 }
